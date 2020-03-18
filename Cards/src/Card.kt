@@ -4,58 +4,61 @@ import kotlin.math.*
 
 open class Card(var question: String, var answer: String, val id: String = UUID.randomUUID().toString(), val date: String = Date().toString()) {
     val rating = listOf<Int>(0,3,5)
-    var quality = 0
+    var quality = -1
     var repetitions = 0
     var interval = 1
-    var nextPracticeDate = 1
+    var nextPracticeDate = 0
     var easiness = 2.5
     var currentDate = 0
 
     /* Function in charge of showing card, showing answer, and asking for rating */
     open fun show() {
+        quality = -1
         println(question)
         println("Press enter to see the answer.")
-        readLine()
+        var y = readLine()
         println(answer)
-        println("Rate question (0 hard, 3 moderate, 5 easy):")
-        quality = try {
-            readLine()!!.toInt()
-        } catch (e: NumberFormatException) {
-            5
+        var x : Int? = null
+        while (x == null && quality !in rating) {
+            print("Rate question (0 hard, 3 moderate, 5 easy): ")
+            x = readLine()!!.toIntOrNull()
+            if (x != null)
+                quality = x
         }
 
-        while (quality !in rating) {
-            println("Rate question (0 hard, 3 moderate, 5 easy):")
-            quality = readLine()!!.toInt()
-        }
+        /* Update the card */
+        update()
     }
 
     /* Controller for studying */
     fun update() {
         /* Easiness update */
         easiness = max(1.3, easiness + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+
         /* Repetitions update */
         repetitions = if (quality < 3) 0
         else repetitions + 1
+
         /* Interval update */
         interval = when (repetitions) {
             0, 1 -> 1
             2 -> 6
-            else -> (round(easiness * 100)/100 * interval).roundToInt()
+            else -> (interval * easiness).roundToInt()
         }
+
         /* Next practice date update */
         nextPracticeDate = currentDate + interval
     }
 
     fun details() {
-        println(question + " " + answer + ", eas = " + round(easiness * 100) / 100 + ", rep = " + repetitions + ", int = " + interval + ", next = " + nextPracticeDate)
+        println(question + " " + answer + ", eas = " + round(easiness * 100) / 100 + ", rep = " + repetitions.toString() + ", int = " + interval.toString() + ", next = " + nextPracticeDate.toString())
     }
 
     companion object {
         var pregunta : String? = null
         var respuesta : String? = null
 
-        open fun leer(): Card {
+        fun leer(): Card {
             var x = -1
             while (x !in 0..1)
             {
@@ -79,65 +82,61 @@ open class Card(var question: String, var answer: String, val id: String = UUID.
                 return Cloze(pregunta.toString(), respuesta.toString())
         }
     }
+
 }
 class Cloze(question: String, answer: String) : Card(question, answer) {
     override fun show() {
+        quality = -1
         var change = ("\\*[a-zA-Z ]+\\*").toRegex()
         println(question)
         println("Press enter to see the answer.")
-        readLine()
+        var z = readLine()
         println(question.replace(change, answer))
-        println("Rate question (0 hard, 3 moderate, 5 easy):")
-        quality = try {
-            readLine()!!.toInt()
-        } catch (e: NumberFormatException) {
-            5
+        var x : Int? = null
+        while (x == null && quality !in rating) {
+            print("Rate question (0 hard, 3 moderate, 5 easy): ")
+            x = readLine()!!.toIntOrNull()
+            if (x != null)
+                quality = x
         }
 
-        while (quality !in rating) {
-            println("Rate question (0 hard, 3 moderate, 5 easy):")
-            quality = readLine()!!.toInt()
-        }
+        update()
     }
 }
 
 fun main() {
+    fun timelapse (deck: List<Card>) {
+        for (i in 0..20){
+            println("Date: " + i)
+            println()
+            for (c in deck) {
+                if (c.nextPracticeDate == c.currentDate) {
+                    c.show()
+                    c.details()
+                }
+                c.currentDate += 1
+                println()
+            }
+        }
+    }
 
     /* MAIN CODE */
     val study = listOf<Card>(
-            Card("Despertarse", "To wake up"),
-            Card("Acostarse", "To go to bed"),
-            Card("Comer", "To eat"),
-            Card("Beber", "To drink"),
-            Card("Hablar", "To speak"),
-            Card("Escuchar", "To listen"),
-            Card("Entender", "To understand"),
-            Card("Vivir", "To live"),
-            Card("Morir", "To die")
+//        Card("Despertarse", "To wake up"),
+//        Card("Acostarse", "To go to bed"),
+//        Card("Comer", "To eat"),
+//        Card("Beber", "To drink"),
+//        Card("Hablar", "To speak"),
+//        Card("Escuchar", "To listen"),
+//        Card("Entender", "To understand"),
+//        Card("Vivir", "To live"),
+//        Card("Morir", "To die")
+            Card("duda", "doubt"),
+            Card("dificil", "difficult")
     )
     var deck: MutableList<Card> = mutableListOf()
     deck.addAll(study)
 
-    //  var x = Card.leer()
-/*    for (i in 1..2) {
-        deck.forEach {
-            it.show()
-            it.update()
-            it.details()
-        }
-    }*/
-
-    //println (x.details())
-
-    var c = Card.leer()
-
-    c.show()
-
-    /*   for (i in 1..7) {
-           deck[0].show()
-           deck[0].update()
-           deck[0].details()
-       }
-   */
+    timelapse(deck)
 
 }
